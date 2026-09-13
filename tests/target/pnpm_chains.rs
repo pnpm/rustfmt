@@ -119,11 +119,12 @@ fn complex_arguments() {
     let _ = map.get(keys[index]).is_some();
     let _ = map.get(key + suffix).is_some();
     let _ = map.get(Key { value: key }).is_some();
-    let _ = map.get({
-        let selected = key;
-        selected
-    })
-    .is_some();
+    let _ = map
+        .get({
+            let selected = key;
+            selected
+        })
+        .is_some();
     let _ = map.get(if condition { first } else { second }).is_some();
     let _ = packages.iter().any(|package| package.enabled);
     let _ = packages.any(|package| package.enabled);
@@ -132,16 +133,18 @@ fn complex_arguments() {
 fn multiline_arguments() {
     let _ = map.get(&key).is_some();
     let _ = map.get("first\nsecond").is_some();
-    let _ = map.get(
-        "first
+    let _ = map
+        .get(
+            "first
 second",
-    )
-    .is_some();
-    let _ = map.get(
-        r#"first
+        )
+        .is_some();
+    let _ = map
+        .get(
+            r#"first
 second"#,
-    )
-    .is_some();
+        )
+        .is_some();
     let _ = receiver
         .set(
             first_argument_with_long_name,

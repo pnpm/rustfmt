@@ -19,3 +19,21 @@ fn indentation_boundary() {
     let _ = 中中.iter().copied().collect::<Vec<_>>();
     let _ = x.a().b().some_much_longer_final_method_name();
 }
+
+fn prefix_widths() {
+    x.iter().map(transform_element).collect::<Vec<_>>();
+    let value = x.iter().map(transform_element).collect::<Vec<_>>();
+    self.iter().map(transform_element).collect::<Vec<_>>();
+    let value = self.iter().map(transform_element).collect::<Vec<_>>();
+    deps.iter().map(transform_element).collect::<Vec<_>>();
+    let value = deps.iter().map(transform_element).collect::<Vec<_>>();
+    items.iter().map(transform_element).collect::<Vec<_>>();
+    let value = items.iter().map(transform_element).collect::<Vec<_>>();
+    中中.iter().map(transform_element).collect::<Vec<_>>();
+    let value = 中中.iter().map(transform_element).collect::<Vec<_>>();
+    let entries = text.lines().filter_map(parse_entry).collect::<Vec<_>>();
+    if x.iter().map(transform_element).all(predicate) {}
+    if xs.iter().map(transform_element).all(predicate) {}
+    while x.iter().map(transform_element).all(predicate) {}
+    return x.iter().map(transform_element).collect::<Vec<_>>();
+}

@@ -724,8 +724,7 @@ impl<'a> ChainFormatterShared<'a> {
                     && (self.method_count == 1
                         || (!self.root_is_call
                             && !attached_method
-                            && utils::unicode_str_width(&root_rewrite)
-                                <= context.config.tab_spaces()));
+                            && utils::unicode_str_width(&root_rewrite) <= tab_width));
                 if !leading_access && !attach_method {
                     break;
                 }
