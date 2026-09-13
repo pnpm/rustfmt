@@ -2,7 +2,7 @@
 // rustfmt-style_edition: 2024
 // rustfmt-max_width: 60
 // rustfmt-indent_style: Visual
-// rustfmt-chain_method_calls_one_per_line: true
+// rustfmt-chain_complexity_layout: true
 
 fn fields_and_methods() {
     let _ = parsed.dlx.os.is_empty();

@@ -295,13 +295,24 @@ where
 }
 ```
 
-## `chain_method_calls_one_per_line`
+## `chain_complexity_layout`
 
-Format chains containing two or more method calls with each call on a separate line.
-Field accesses stay with their receiver when they fit, and `.await` and `?` stay
-with the preceding expression. Chains containing at most one method call may use
-the available line width. Comments and `max_width` can still require line breaks.
-When enabled, this option replaces `chain_width`'s width-based decision.
+Keep chains containing at most two method calls on one line when every argument
+is simple and the expression fits `max_width`. Chains containing three or more
+method calls, complex arguments, or arguments that format across multiple lines
+put each method call on its own line. The rule applies in all expression contexts,
+including `if` and `while` conditions.
+
+Simple arguments are literals, paths (including qualified paths), field accesses,
+and references, unary operators, or parentheses around those expressions. Calls,
+closures, blocks, and other expressions are complex. Formatting an argument onto
+multiple lines makes it complex regardless of its syntax. Source line breaks that
+the formatter removes do not make an argument complex.
+
+Field accesses do not count as method calls and stay with their receiver when they
+fit. `.await` and `?` stay with the preceding expression when possible. Comments and
+`max_width` can still require line breaks. When enabled, this option replaces
+`chain_width`'s width-based decision. When disabled, normal rustfmt layout applies.
 
 - **Default value**: `false`
 - **Possible values**: `true`, `false`
@@ -312,11 +323,17 @@ When enabled, this option replaces `chain_width`'s width-based decision.
 ```rust
 fn example() {
     parsed.dlx.os.is_empty();
+    packages.iter().count();
+    values.get(&key).is_some();
 
-    parsed.dlx.os
+    packages
         .iter()
         .map(Os::as_str)
         .collect::<Vec<_>>();
+
+    packages
+        .iter()
+        .any(|package| package.name == expected);
 }
 ```
 

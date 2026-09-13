@@ -334,6 +334,15 @@ impl Rewrite for ChainItem {
 }
 
 impl ChainItem {
+    fn has_complex_arguments(&self) -> bool {
+        match &self.kind {
+            ChainItemKind::MethodCall(_, _, arguments) => arguments
+                .iter()
+                .any(|argument| !is_simple_chain_argument(argument)),
+            _ => false,
+        }
+    }
+
     fn new(context: &RewriteContext<'_>, expr: &SubExpr, tries: usize) -> ChainItem {
         let (kind, span) = ChainItemKind::from_ast(context, &expr.expr, expr.is_postfix_receiver);
         ChainItem { kind, tries, span }
@@ -687,7 +696,7 @@ impl<'a> ChainFormatterShared<'a> {
             if let ChainItemKind::Comment(..) = item.kind {
                 break;
             }
-            if context.config.chain_method_calls_one_per_line() {
+            if context.config.chain_complexity_layout() {
                 if !matches!(
                     item.kind,
                     ChainItemKind::StructField(..) | ChainItemKind::TupleField { .. }
@@ -697,7 +706,7 @@ impl<'a> ChainFormatterShared<'a> {
             } else if root_rewrite.len() > tab_width {
                 break;
             }
-            let shape = if context.config.chain_method_calls_one_per_line() {
+            let shape = if context.config.chain_complexity_layout() {
                 let Some(shape) = shape.offset_left_opt(utils::unicode_str_width(&root_rewrite))
                 else {
                     break;
@@ -708,7 +717,7 @@ impl<'a> ChainFormatterShared<'a> {
             };
             match &item.rewrite_result(context, shape) {
                 Ok(rewrite)
-                    if context.config.chain_method_calls_one_per_line()
+                    if context.config.chain_complexity_layout()
                         && utils::unicode_str_width(rewrite) > shape.width =>
                 {
                     break;
@@ -789,8 +798,15 @@ impl<'a> ChainFormatterShared<'a> {
         child_shape: Shape,
     ) -> Result<(), RewriteError> {
         let last = self.children.last().unknown_error()?;
-        let method_layout = context.config.chain_method_calls_one_per_line();
-        let force_vertical = method_layout && self.method_count > 1;
+        let method_layout = context.config.chain_complexity_layout();
+        let force_vertical = method_layout
+            && (self.method_count > 2
+                || self.children.iter().any(ChainItem::has_complex_arguments)
+                || self
+                    .rewrites
+                    .iter()
+                    .skip(1)
+                    .any(|rewrite| rewrite.contains('\n')));
         let extendable = may_extend && !force_vertical && last_line_extendable(&self.rewrites[0]);
         let prev_last_line_width = last_line_width(&self.rewrites[0]);
 
@@ -881,8 +897,17 @@ impl<'a> ChainFormatterShared<'a> {
             child_shape.sub_width(shape.rhs_overhead(context.config) + last.tries, last.span)?
         };
 
-        let last_subexpr_str =
+        let mut last_subexpr_str =
             last_subexpr_str.unwrap_or(last.rewrite_result(context, last_shape)?);
+        if method_layout
+            && matches!(last.kind, ChainItemKind::MethodCall(..))
+            && last_subexpr_str.contains('\n')
+        {
+            self.fits_single_line = false;
+            let last_shape = child_shape
+                .sub_width(shape.rhs_overhead(context.config) + last.tries, last.span)?;
+            last_subexpr_str = last.rewrite_result(context, last_shape)?;
+        }
         self.rewrites.push(last_subexpr_str);
         Ok(())
     }
@@ -914,7 +939,7 @@ impl<'a> ChainFormatterShared<'a> {
             } else {
                 self.root_width
             };
-            let attach_suffix = context.config.chain_method_calls_one_per_line()
+            let attach_suffix = context.config.chain_complexity_layout()
                 && !previous_is_comment
                 && matches!(
                     chain_item.kind,
@@ -1023,7 +1048,7 @@ impl<'a> ChainFormatter for ChainFormatterVisual<'a> {
         context: &RewriteContext<'_>,
         shape: Shape,
     ) -> Result<(), RewriteError> {
-        if context.config.chain_method_calls_one_per_line() {
+        if context.config.chain_complexity_layout() {
             self.shared.format_root(parent, context, shape)?;
             self.offset = last_line_width(&self.shared.rewrites[0]);
             let available = shape.width.saturating_sub(self.offset);
@@ -1154,6 +1179,17 @@ fn should_add_parens(expr: &ast::Expr, context: &RewriteContext<'_>) -> bool {
             ast::ExprKind::Lit(ref lit) => crate::expr::lit_ends_in_dot(lit, context),
             _ => false,
         },
+        _ => false,
+    }
+}
+
+fn is_simple_chain_argument(expression: &ast::Expr) -> bool {
+    match &expression.kind {
+        ast::ExprKind::Lit(..) | ast::ExprKind::Path(..) => true,
+        ast::ExprKind::AddrOf(_, _, inner)
+        | ast::ExprKind::Field(inner, _)
+        | ast::ExprKind::Paren(inner)
+        | ast::ExprKind::Unary(_, inner) => is_simple_chain_argument(inner),
         _ => false,
     }
 }
