@@ -31,3 +31,9 @@ fn unicode_field_prefixes() {
     let _ = packages.configuration.platform.éééééééééééééééééé;
     let _ = packages.configuration.platform.éééééééééééééééééé.iter().count();
 }
+
+fn trailing_fields() {
+    let _ = metadata.get("package").expect("metadata").details.deprecated.as_deref();
+    let _ = metadata.get("package").expect("metadata").0.1.as_deref();
+    let _ = metadata.get("package").0.1;
+}

@@ -941,12 +941,7 @@ impl<'a> ChainFormatterShared<'a> {
             };
             let attach_suffix = context.config.chain_complexity_layout()
                 && !previous_is_comment
-                && matches!(
-                    chain_item.kind,
-                    ChainItemKind::StructField(..)
-                        | ChainItemKind::TupleField { .. }
-                        | ChainItemKind::Await
-                )
+                && matches!(chain_item.kind, ChainItemKind::Await)
                 && last_line_width(&result) + utils::unicode_str_width(rewrite) <= line_width;
             match chain_item.kind {
                 ChainItemKind::Comment(_, CommentPosition::Back) => result.push(' '),

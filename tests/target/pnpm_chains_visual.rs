@@ -9,7 +9,9 @@ fn fields_and_methods() {
     let _ = x.a.b.iter().count();
     let _ = parsed.dlx.os.iter().count();
     let _ = parsed
-                  .get().dlx.os
+                  .get()
+                  .dlx
+                  .os
                   .iter()
                   .count();
     let _ = parsed.0.1.iter().count();
@@ -51,4 +53,20 @@ fn unicode_field_prefixes() {
             .éééééééééééééééééé
             .iter()
             .count();
+}
+
+fn trailing_fields() {
+    let _ = metadata
+                    .get("package")
+                    .expect("metadata")
+                    .details
+                    .deprecated
+                    .as_deref();
+    let _ = metadata
+                    .get("package")
+                    .expect("metadata")
+                    .0
+                    .1
+                    .as_deref();
+    let _ = metadata.get("package").0.1;
 }

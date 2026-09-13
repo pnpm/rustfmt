@@ -309,8 +309,9 @@ closures, blocks, and other expressions are complex. Formatting an argument onto
 multiple lines makes it complex regardless of its syntax. Source line breaks that
 the formatter removes do not make an argument complex.
 
-Field accesses do not count as method calls and stay with their receiver when they
-fit. `.await` and `?` stay with the preceding expression when possible. Comments and
+Field accesses do not count as method calls. Leading field accesses stay with the
+root receiver when they fit. In a multiline chain, fields following a method call
+each occupy their own line. `.await` and `?` stay with the preceding expression when possible. Comments and
 `max_width` can still require line breaks. When enabled, this option replaces
 `chain_width`'s width-based decision. When disabled, normal rustfmt layout applies.
 

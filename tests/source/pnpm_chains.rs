@@ -135,3 +135,19 @@ fn multiline_receivers() {
         value
     }.is_empty();
 }
+
+fn trailing_fields_in_vertical_chains() {
+    let _ = metadata.get("package").expect("package metadata").deprecated;
+    let _ = metadata.get("package").expect("package metadata").deprecated.as_deref();
+    let _ = metadata.get("package").expect("package metadata").details.deprecated.as_deref();
+    let _ = metadata.get("package").expect("package metadata").0.1.as_deref();
+    let _ = metadata.get(package_name()).details.deprecated;
+    let _ = metadata.registry.packages.get("package").expect("package metadata").deprecated.as_deref();
+    let _ = metadata.get("package").expect("package metadata").details // keep details
+        .deprecated.as_deref();
+}
+
+async fn fields_after_await_in_vertical_chains() {
+    let _ = client.registry.fetch().await?.value.name.trim().is_empty();
+    let _ = client.registry.fetch(request()).await?.value.name;
+}
