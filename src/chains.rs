@@ -334,11 +334,11 @@ impl Rewrite for ChainItem {
 }
 
 impl ChainItem {
-    fn has_complex_arguments(&self) -> bool {
+    fn has_complex_arguments(&self, context: &RewriteContext<'_>) -> bool {
         match &self.kind {
             ChainItemKind::MethodCall(_, _, arguments) => arguments
                 .iter()
-                .any(|argument| !is_simple_chain_argument(argument)),
+                .any(|argument| !is_simple_chain_argument(argument, context)),
             _ => false,
         }
     }
@@ -836,11 +836,40 @@ impl<'a> ChainFormatterShared<'a> {
     ) -> Result<(), RewriteError> {
         let last = self.children.last().unknown_error()?;
         let method_layout = context.config.chain_complexity_layout();
+        if method_layout
+            && !self.head_width_exceeded
+            && !self.children.iter().any(ChainItem::is_comment)
+            && self.rewrites.iter().all(|rewrite| !rewrite.contains('\n'))
+        {
+            let prefix_width: usize = self
+                .rewrites
+                .iter()
+                .map(|s| utils::unicode_str_width(s))
+                .sum();
+            let budget = shape.width.min(context.config.chain_width());
+            if let Some(last_shape) = (Shape {
+                width: budget,
+                ..shape
+            })
+            .offset_left_opt(prefix_width)
+            {
+                if let Ok(rewrite) = last.rewrite_result(context, last_shape) {
+                    if !rewrite.contains('\n') && first_line_width(&rewrite) <= last_shape.width {
+                        self.rewrites.push(rewrite);
+                        self.fits_single_line = true;
+                        return Ok(());
+                    }
+                }
+            }
+        }
         let force_vertical = self.head_width_exceeded
             || (method_layout
                 && self.method_count > 1
                 && (self.method_count > 2
-                    || self.children.iter().any(ChainItem::has_complex_arguments)
+                    || self
+                        .children
+                        .iter()
+                        .any(|item| item.has_complex_arguments(context))
                     || self
                         .rewrites
                         .iter()
@@ -1214,13 +1243,44 @@ fn should_add_parens(expr: &ast::Expr, context: &RewriteContext<'_>) -> bool {
     }
 }
 
-fn is_simple_chain_argument(expression: &ast::Expr) -> bool {
+fn is_simple_chain_argument(expression: &ast::Expr, context: &RewriteContext<'_>) -> bool {
+    match &expression.kind {
+        ast::ExprKind::Closure(closure) => {
+            let body = if matches!(closure.fn_decl.output, ast::FnRetTy::Default(_))
+                && !context.inside_macro()
+            {
+                crate::closures::get_inner_expr(&closure.body, "", context)
+            } else {
+                &closure.body
+            };
+            match &body.kind {
+                ast::ExprKind::Call(callee, args) => {
+                    matches!(callee.kind, ast::ExprKind::Path(..))
+                        && args.iter().all(|arg| is_simple_chain_value(arg))
+                }
+                _ => is_simple_chain_value(body),
+            }
+        }
+        _ => is_simple_chain_value(expression),
+    }
+}
+
+fn is_simple_chain_value(expression: &ast::Expr) -> bool {
+    match &expression.kind {
+        ast::ExprKind::MethodCall(call) => {
+            call.args.is_empty() && is_simple_chain_atom(&call.receiver)
+        }
+        _ => is_simple_chain_atom(expression),
+    }
+}
+
+fn is_simple_chain_atom(expression: &ast::Expr) -> bool {
     match &expression.kind {
         ast::ExprKind::Lit(..) | ast::ExprKind::Path(..) => true,
         ast::ExprKind::AddrOf(_, _, inner)
         | ast::ExprKind::Field(inner, _)
         | ast::ExprKind::Paren(inner)
-        | ast::ExprKind::Unary(_, inner) => is_simple_chain_argument(inner),
+        | ast::ExprKind::Unary(_, inner) => is_simple_chain_atom(inner),
         _ => false,
     }
 }

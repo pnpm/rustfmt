@@ -59,8 +59,8 @@ create_config! {
         "Maximum line width through leading field or await accesses; \
         negative values use max_width.";
     chain_complexity_layout: ChainComplexityLayout, true,
-        "Keep up to two simple method calls inline, and put longer or complex chains \
-        on separate lines while grouping leading accesses within chain_head_width.";
+        "Keep chains within chain_width and up to two simple method calls inline; \
+        wrap other chains while grouping leading accesses within chain_head_width.";
     single_line_if_else_max_width: SingleLineIfElseMaxWidth, true, "Maximum line length for single \
         line if-else expressions. A value of zero means always break if-else expressions.";
     single_line_let_else_max_width: SingleLineLetElseMaxWidth, true, "Maximum line length for \

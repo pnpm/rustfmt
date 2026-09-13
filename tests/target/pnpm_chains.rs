@@ -20,38 +20,21 @@ fn tuple_receivers() {
     let _ = parsed.0.1;
     let _ = parsed.0.1.is_empty();
     let _ = parsed.0.1.iter().count();
-    let _ = parsed
-        .first()
-        .0
-        .1
-        .iter()
-        .count();
+    let _ = parsed.first().0.1.iter().count();
 }
 
 fn fields_after_methods() {
     let _ = parsed.get().dlx.os;
     let _ = parsed.get().dlx.os.is_empty();
-    let _ = parsed
-        .get()
-        .dlx
-        .os
-        .iter()
-        .count();
+    let _ = parsed.get().dlx.os.iter().count();
     let _ = parsed.get().dlx.os.clone().length;
-    let _ = parsed
-        .get()
-        .dlx
-        .os?
-        .iter()
-        .count();
+    let _ = parsed.get().dlx.os?.iter().count();
 }
 
 fn nested_arguments() {
     let _ = output.contains(input.trim());
     let _ = output.contains(input.trim().to_lowercase());
-    let _ = output.values
-        .map(|value| value.name.trim())
-        .collect::<Vec<_>>();
+    let _ = output.values.map(|value| value.name.trim()).collect::<Vec<_>>();
     let _ = build(input.trim().to_lowercase()).value.is_empty();
     let _ = Vec::new().iter().count();
 }
@@ -127,40 +110,23 @@ fn simple_arguments() {
     let _ = map.get((key)).is_some();
     let _ = map.get(-1).is_some();
     let _ = map.get(&*key).is_some();
-    let _ = map
-        .get(key)
-        .unwrap()
-        .is_empty();
+    let _ = map.get(key).unwrap().is_empty();
 }
 
 fn complex_arguments() {
-    let _ = map
-        .get(make_key())
-        .is_some();
-    let _ = map
-        .get(&make_key())
-        .is_some();
-    let _ = map
-        .get(keys[index])
-        .is_some();
-    let _ = map
-        .get(key + suffix)
-        .is_some();
-    let _ = map
-        .get(Key { value: key })
-        .is_some();
+    let _ = map.get(make_key()).is_some();
+    let _ = map.get(&make_key()).is_some();
+    let _ = map.get(keys[index]).is_some();
+    let _ = map.get(key + suffix).is_some();
+    let _ = map.get(Key { value: key }).is_some();
     let _ = map
         .get({
             let selected = key;
             selected
         })
         .is_some();
-    let _ = map
-        .get(if condition { first } else { second })
-        .is_some();
-    let _ = packages
-        .iter()
-        .any(|package| package.enabled);
+    let _ = map.get(if condition { first } else { second }).is_some();
+    let _ = packages.iter().any(|package| package.enabled);
     let _ = packages.any(|package| package.enabled);
 }
 
@@ -202,20 +168,10 @@ second"#,
 
 fn conditions() {
     if map.get(&key).is_some() {}
-    if map
-        .get(&key)
-        .unwrap()
-        .is_empty()
-    {}
-    if packages
-        .iter()
-        .any(|package| package.enabled)
-    {}
+    if map.get(&key).unwrap().is_empty() {}
+    if packages.iter().any(|package| package.enabled) {}
     while map.get(&key).is_some() {}
-    while map
-        .get(make_key())
-        .is_some()
-    {}
+    while map.get(make_key()).is_some() {}
     match value {
         Some(value) if value.get(&key).is_some() => (),
         _ => (),
@@ -269,13 +225,7 @@ fn trailing_fields_in_vertical_chains() {
 }
 
 async fn fields_after_await_in_vertical_chains() {
-    let _ = client.registry
-        .fetch()
-        .await?
-        .value
-        .name
-        .trim()
-        .is_empty();
+    let _ = client.registry.fetch().await?.value.name.trim().is_empty();
     let _ = client.registry.fetch(request()).await?.value.name;
 }
 
@@ -329,28 +279,10 @@ fn function_call_receivers() {
 
 async fn await_uses_field_layout() {
     let _ = client.fetch().await?.metadata.validate();
-    let _ = client
-        .fetch()
-        .await?
-        .metadata
-        .validate()
-        .finish();
-    let _ = client
-        .fetch()
-        .await?
-        .metadata
-        .validate(options());
-    let _ = future.await?.metadata
-        .validate()
-        .finish()
-        .count();
-    let _ = client
-        .fetch()
-        .await?
-        .0
-        .1
-        .validate()
-        .finish();
+    let _ = client.fetch().await?.metadata.validate().finish();
+    let _ = client.fetch().await?.metadata.validate(options());
+    let _ = future.await?.metadata.validate().finish().count();
+    let _ = client.fetch().await?.0.1.validate().finish();
     let _ = client.fetch(request()).await?;
     let _ = client
         .fetch(request())

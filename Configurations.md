@@ -313,7 +313,10 @@ use the normal `max_width` limit, and explicit values cannot exceed `max_width`.
 
 ## `chain_complexity_layout`
 
-A single method call starts on the receiver's line when it fits, including calls
+Chains that fit on one line within `chain_width` stay inline regardless of their
+method count or argument complexity. This allowance measures the chain expression,
+excluding indentation and assignment prefixes, and never overrides `chain_head_width`.
+For longer chains, a single method call starts on the receiver's line when it fits, including calls
 with complex or multiline arguments. When the receiver is a function call, prefer
 a line break before the method over splitting its arguments. Two method calls stay on one line when every
 argument is simple and the expression fits `max_width`. Chains containing three
@@ -322,8 +325,11 @@ method call on its own line. The rule applies in all expression contexts,
 including `if` and `while` conditions.
 
 Simple arguments are literals, paths (including qualified paths), field accesses,
-and references, unary operators, or parentheses around those expressions. Calls,
-closures, blocks, and other expressions are complex. Formatting an argument onto
+and references, unary operators, or parentheses around those expressions. A zero-argument
+method on one of those receivers is also simple. Expression closures are simple
+when their body is one of these values or one function call with simple value
+arguments. Nested calls, method pipelines, statement blocks, and control flow remain complex.
+Redundant closure braces that rustfmt removes do not affect complexity. Formatting an argument onto
 multiple lines makes it complex regardless of its syntax. Source line breaks that
 the formatter removes do not make an argument complex.
 
@@ -331,8 +337,7 @@ Field accesses do not count as method calls. Leading field accesses stay with th
 root receiver within `chain_head_width`. In a multiline chain, fields following a method call
 each occupy their own line. `.await` follows the same layout rules as field
 accesses. `?` stays attached to the preceding expression. Comments and
-`max_width` can still require line breaks. When enabled, this option replaces
-`chain_width`'s width-based decision. When disabled, normal rustfmt layout applies.
+`max_width` can still require line breaks. When enabled, `chain_width` provides the small-expression allowance above. When disabled, normal rustfmt layout applies.
 
 - **Default value**: `false`
 - **Possible values**: `true`, `false`
@@ -346,14 +351,9 @@ fn example() {
     packages.iter().count();
     values.get(&key).is_some();
 
-    packages
-        .iter()
-        .map(Os::as_str)
-        .collect::<Vec<_>>();
+    packages.iter().map(Os::as_str).collect::<Vec<_>>();
 
-    packages
-        .iter()
-        .any(|package| package.name == expected);
+    packages.iter().any(|package| package.name == expected);
 }
 ```
 

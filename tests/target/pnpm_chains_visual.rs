@@ -8,12 +8,7 @@ fn fields_and_methods() {
     let _ = parsed.dlx.os.is_empty();
     let _ = x.a.b.iter().count();
     let _ = parsed.dlx.os.iter().count();
-    let _ = parsed
-                  .get()
-                  .dlx
-                  .os
-                  .iter()
-                  .count();
+    let _ = parsed.get().dlx.os.iter().count();
     let _ = parsed.0.1.iter().count();
 }
 
@@ -109,28 +104,13 @@ fn function_call_receivers() {
 
 async fn await_uses_field_layout() {
     let _ = client.fetch().await?.metadata.validate();
-    let _ = client
-                  .fetch()
-                  .await?
-                  .metadata
-                  .validate()
-                  .finish();
-    let _ = client
-                  .fetch()
-                  .await?
-                  .metadata
-                  .validate(options());
-    let _ = future.await?.metadata
-                                  .validate()
-                                  .finish()
-                                  .count();
-    let _ = client
-                  .fetch()
-                  .await?
-                  .0
-                  .1
-                  .validate()
-                  .finish();
+    let _ =
+        client.fetch().await?.metadata.validate().finish();
+    let _ =
+        client.fetch().await?.metadata.validate(options());
+    let _ =
+        future.await?.metadata.validate().finish().count();
+    let _ = client.fetch().await?.0.1.validate().finish();
     let _ = client.fetch(request()).await?;
     let _ = client
                   .fetch(request())

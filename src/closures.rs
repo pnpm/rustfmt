@@ -101,7 +101,7 @@ fn try_rewrite_without_block(
     }
 }
 
-fn get_inner_expr<'a>(
+pub(crate) fn get_inner_expr<'a>(
     expr: &'a ast::Expr,
     prefix: &str,
     context: &RewriteContext<'_>,
