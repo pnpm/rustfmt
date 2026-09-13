@@ -298,7 +298,8 @@ where
 ## `chain_head_width`
 
 Limit the total line width through each field or `.await` access kept on the
-initial line of a chain. The count includes indentation and preceding text such
+initial line of a chain when another chain item follows it. A final access uses
+the ordinary `max_width` budget. The count includes indentation and preceding text such
 as `let value = `. This option only applies with `chain_complexity_layout = true`.
 It covers named fields, tuple fields, and `.await`; `?` stays with its access.
 Method openings retain their normal complexity-based layout.

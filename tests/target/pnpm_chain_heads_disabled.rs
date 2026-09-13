@@ -55,3 +55,35 @@ fn nested_assignments() {
     }
     .field;
 }
+
+async fn final_accesses() {
+    let err = login::<FakeHost, RecordingReporter>(&client(), opts(&registry, config_dir)).await?;
+    let err = login::<FakeHost, RecordingReporter>(&client(), opts(&registry, config_dir))
+        .await
+        .unwrap_err();
+    let _ = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.field;
+    let _ = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.0;
+    let _ = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.await?;
+    let _ = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        .first
+        .field;
+    let _ = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        .first
+        .0;
+    let _ = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        .first
+        .await?;
+    let _ = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        .long_field_name;
+    let _ = long_call(
+        &argument,
+        another_argument,
+        third_argument,
+        fourth_argument,
+        final_argument,
+    )
+    .await?;
+    let _ = long_call(&argument, another_argument, third_argument)
+        .await? // keep
+        .unwrap();
+}

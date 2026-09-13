@@ -56,7 +56,7 @@ create_config! {
         back to vertical formatting.";
     chain_width: ChainWidth, true, "Maximum length of a chain to fit on a single line.";
     chain_head_width: ChainHeadWidth, true,
-        "Maximum line width through leading field or await accesses; \
+        "Maximum line width through nonfinal leading field or await accesses; \
         negative values use max_width.";
     chain_complexity_layout: ChainComplexityLayout, true,
         "Keep chains within chain_width and up to two simple method calls inline; \

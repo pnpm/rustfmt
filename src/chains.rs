@@ -744,6 +744,7 @@ impl<'a> ChainFormatterShared<'a> {
                 }
                 Ok(rewrite) => {
                     if context.config.chain_complexity_layout()
+                        && self.children.len() > 1
                         && matches!(
                             item.kind,
                             ChainItemKind::StructField(..)
