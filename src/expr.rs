@@ -2276,27 +2276,51 @@ pub(crate) fn rewrite_assign_rhs_expr<R: Rewrite>(
         false
     };
 
-    context.chain_head_break.set(None);
-    let orig_rhs = ex.rewrite_result(context, orig_shape);
-    if rhs_tactics != RhsTactics::ForceNextLineWithoutIndent && !has_rhs_comment {
-        if let RhsAssignKind::Expr(_, span) = rhs_kind {
-            if context.chain_head_break.get() == Some(*span) {
-                if let Ok(rhs) = orig_rhs {
-                    return Ok(format!(" {rhs}"));
+    let receiver_offset = match rhs_kind {
+        RhsAssignKind::Expr(kind, span) if context.config.chain_complexity_layout() => {
+            let (mut kind, mut span, mut offset) = (*kind, *span, orig_shape.offset);
+            loop {
+                let mut untried = kind;
+                while let ast::ExprKind::Try(inner) = untried {
+                    untried = &inner.kind;
+                }
+                let ast::ExprKind::Paren(inner) = untried else {
+                    break;
+                };
+                kind = &inner.kind;
+                span = inner.span;
+                offset += 1;
+            }
+            Some((span, offset))
+        }
+        _ => None,
+    };
+    let previous_offset = context.chain_receiver_offset.replace(receiver_offset);
+    let result = (|| {
+        context.chain_head_break.set(None);
+        let orig_rhs = ex.rewrite_result(context, orig_shape);
+        if rhs_tactics != RhsTactics::ForceNextLineWithoutIndent && !has_rhs_comment {
+            if let RhsAssignKind::Expr(_, span) = rhs_kind {
+                if context.chain_head_break.get() == Some(*span) {
+                    if let Ok(rhs) = orig_rhs {
+                        return Ok(format!(" {rhs}"));
+                    }
                 }
             }
         }
-    }
 
-    choose_rhs(
-        context,
-        ex,
-        orig_shape,
-        orig_rhs,
-        rhs_kind,
-        rhs_tactics,
-        has_rhs_comment,
-    )
+        choose_rhs(
+            context,
+            ex,
+            orig_shape,
+            orig_rhs,
+            rhs_kind,
+            rhs_tactics,
+            has_rhs_comment,
+        )
+    })();
+    context.chain_receiver_offset.set(previous_offset);
+    result
 }
 
 pub(crate) fn rewrite_assign_rhs_with<S: Into<String>, R: Rewrite>(

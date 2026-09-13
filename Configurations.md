@@ -327,7 +327,8 @@ including `if` and `while` conditions. In a wrapped chain, the first method stay
 with a non-call receiver when the first line, including preceding code such as
 `let value = ` or `if `, ends within one indentation level (`tab_spaces`) beyond
 the enclosing block indent. This rule also uses that budget with visual indentation.
-Only the first method gets this allowance. Leading fields and awaits continue to follow `chain_head_width`;
+The original assignment prefix still counts when comparing a layout with the RHS
+on a new line. Only the first method gets this allowance. Leading fields and awaits continue to follow `chain_head_width`;
 fields and awaits after a method on a new line remain on separate lines.
 
 Simple arguments are literals, paths (including qualified paths), field accesses,

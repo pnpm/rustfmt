@@ -654,6 +654,7 @@ trait ChainFormatter {
 // Data and behaviour that is shared by both chain formatters. The concrete
 // formatters can delegate much behaviour to `ChainFormatterShared`.
 struct ChainFormatterShared<'a> {
+    span: Span,
     // The current working set of child items.
     children: &'a [ChainItem],
     // The current rewrites of items (includes trailing `?`s, but not any way to
@@ -675,6 +676,7 @@ struct ChainFormatterShared<'a> {
 impl<'a> ChainFormatterShared<'a> {
     fn new(chain: &'a Chain) -> ChainFormatterShared<'a> {
         ChainFormatterShared {
+            span: chain.span,
             children: &chain.children,
             rewrites: Vec::with_capacity(chain.children.len() + 1),
             fits_single_line: false,
@@ -705,7 +707,16 @@ impl<'a> ChainFormatterShared<'a> {
         let mut root_rewrite: String = parent.rewrite_result(context, shape)?;
 
         let mut root_ends_with_block = parent.kind.is_block_like(context, &root_rewrite);
-        let tab_width = context.config.tab_spaces().saturating_sub(shape.offset);
+        let receiver_offset = if context.config.chain_complexity_layout() {
+            context
+                .chain_receiver_offset
+                .get()
+                .filter(|(span, _)| *span == self.span)
+                .map_or(shape.offset, |(_, offset)| offset.max(shape.offset))
+        } else {
+            shape.offset
+        };
+        let tab_width = context.config.tab_spaces().saturating_sub(receiver_offset);
         let mut attached_method = false;
 
         while !root_rewrite.contains('\n') {

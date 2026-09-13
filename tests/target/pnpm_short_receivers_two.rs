@@ -109,3 +109,60 @@ fn prefix_widths() {
     .map(transform_element)
     .collect::<Vec<_>>();
 }
+
+async fn assignment_fallback() {
+  let url = args
+    .documentation_url(&config_for(&server.url()))
+    .await
+    .expect("docs URL must resolve");
+  let _ = args
+    .documentation_url(&config_for(&server.url()))
+    .await?
+    .field
+    .expect("resolve");
+  let _ = args
+    .map(nested_call(value))
+    .expect("some longer expectation text");
+  let _ = short.field;
+  args
+    .documentation_url(&config_for(&server.url()))
+    .await
+    .expect("docs URL must resolve");
+  let _ = outer
+    .map(|value| {
+      let inner = args
+        .documentation_url(&config_for(&server.url()))
+        .await
+        .expect("docs URL must resolve");
+      inner
+    })
+    .expect("resolve");
+}
+
+fn long_assignment_prefix() {
+  let long_binding_long_binding_long_binding_long_binding_long_binding_long_binding_ = args
+    .documentation_url(&config_for(&server.url()))
+    .expect("docs URL must resolve");
+  args
+    .documentation_url(&config_for(&server.url()))
+    .expect("docs URL must resolve");
+}
+
+async fn wrapped_assignment_values() {
+  let url = args
+    .documentation_url(&config_for(&server.url()))
+    .await
+    .expect("docs URL must resolve")?;
+  let url = (x
+    .documentation_url(&config_for(&server.url()))
+    .await
+    .expect("docs URL must resolve"));
+  let url = (x
+    .documentation_url(&config_for(&server.url()))
+    .await
+    .expect("docs URL must resolve"))?;
+  let url = (x
+    .documentation_url(&config_for(&server.url()))
+    .await
+    .expect("docs URL must resolve"));
+}
