@@ -1816,7 +1816,14 @@ fn rewrite_struct_lit<'a>(
     };
 
     // Foo { a: Foo } - indent is +3, width is -5.
-    let (h_shape, v_shape) = struct_lit_shape(shape, context, path_str.len() + 3, 2, span)?;
+    let (h_shape, v_shape) = struct_lit_shape(
+        shape,
+        context,
+        path_str.len() + 3,
+        2,
+        context.config.struct_lit_width(),
+        span,
+    )?;
 
     let one_line_width = h_shape.map_or(0, |shape| shape.width);
     let body_lo = context.snippet_provider.span_after(span, "{");

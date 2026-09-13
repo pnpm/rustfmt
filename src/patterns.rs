@@ -360,12 +360,16 @@ fn rewrite_struct_pat(
 
     let (ellipsis_str, terminator) = if ellipsis { (", ..", "..") } else { ("", "}") };
 
+    let pattern_width = usize::try_from(context.config.struct_pattern_width())
+        .unwrap_or_else(|_| context.config.struct_lit_width());
+
     // 3 = ` { `, 2 = ` }`.
     let (h_shape, v_shape) = struct_lit_shape(
         shape,
         context,
         path_str.len() + 3,
         ellipsis_str.len() + 2,
+        pattern_width,
         span,
     )?;
 

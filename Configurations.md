@@ -2869,6 +2869,30 @@ fn main() {
 
 See also: [`indent_style`](#indent_style).
 
+## `struct_pattern_width`
+
+Maximum width of the fields inside a struct pattern before using multiple lines.
+This controls destructuring in matches, `let` bindings, and function parameters
+independently of struct literals. Negative values inherit `struct_lit_width`,
+preserving the normal rustfmt behavior. An explicit nonnegative value is an
+absolute width, unaffected by `use_small_heuristics`; the available line width
+and `max_width` still limit the result. Comments can require additional lines.
+
+- **Default value**: `-1` (inherit `struct_lit_width`)
+- **Possible values**: any signed integer; negative values inherit, `0` forces multiline fields
+- **Stable**: Yes (pnpm fork extension)
+
+#### `35`:
+
+```rust
+fn example(command: Command) {
+    match command {
+        Command::Use { package_name } => run(package_name),
+        Command::Pair { first, second } => pair(first, second),
+    }
+}
+```
+
 ## `struct_lit_width`
 
 Maximum width in the body of a struct literal before falling back to vertical formatting. A value of `0` (zero) results in struct literals always being broken into multiple lines. Note this occurs when `use_small_heuristics` is set to `Off`.

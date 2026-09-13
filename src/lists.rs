@@ -865,6 +865,7 @@ pub(crate) fn struct_lit_shape(
     context: &RewriteContext<'_>,
     prefix_width: usize,
     suffix_width: usize,
+    width_limit: usize,
     span: Span,
 ) -> Result<(Option<Shape>, Shape), ExceedsMaxWidthError> {
     let v_shape = match context.config.indent_style() {
@@ -884,7 +885,7 @@ pub(crate) fn struct_lit_shape(
         .width
         .checked_sub(prefix_width + suffix_width)
         .map(|w| {
-            let shape_width = cmp::min(w, context.config.struct_lit_width());
+            let shape_width = cmp::min(w, width_limit);
             Shape::legacy(shape_width, shape.indent)
         });
     Ok((h_shape, v_shape))

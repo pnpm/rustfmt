@@ -641,6 +641,7 @@ config_option_with_style_edition_default!(
     FnCallWidth, usize, _ => 60;
     AttrFnLikeWidth, usize, _ => 70;
     StructLitWidth, usize, _ => 18;
+    StructPatternWidth, isize, _ => -1;
     StructVariantWidth, usize, _ => 35;
     ArrayWidth, usize, _ => 60;
     ChainWidth, usize, _ => 60;

@@ -48,6 +48,8 @@ create_config! {
         attributes before falling back to vertical formatting.";
     struct_lit_width: StructLitWidth, true, "Maximum width in the body of a struct lit before \
         falling back to vertical formatting.";
+    struct_pattern_width: StructPatternWidth, true,
+        "Maximum width in the body of a struct pattern; negative values inherit struct_lit_width.";
     struct_variant_width: StructVariantWidth, true, "Maximum width in the body of a struct variant \
         before falling back to vertical formatting.";
     array_width: ArrayWidth, true,  "Maximum width of an array literal before falling \
@@ -770,6 +772,7 @@ use_small_heuristics = "Default"
 fn_call_width = 60
 attr_fn_like_width = 70
 struct_lit_width = 18
+struct_pattern_width = -1
 struct_variant_width = 35
 array_width = 60
 chain_width = 60
@@ -864,6 +867,7 @@ use_small_heuristics = "Default"
 fn_call_width = 60
 attr_fn_like_width = 70
 struct_lit_width = 18
+struct_pattern_width = -1
 struct_variant_width = 35
 array_width = 60
 chain_width = 60
