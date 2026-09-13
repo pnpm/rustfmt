@@ -313,7 +313,8 @@ the formatter removes do not make an argument complex.
 
 Field accesses do not count as method calls. Leading field accesses stay with the
 root receiver when they fit. In a multiline chain, fields following a method call
-each occupy their own line. `.await` and `?` stay with the preceding expression when possible. Comments and
+each occupy their own line. `.await` follows the same layout rules as field
+accesses. `?` stays attached to the preceding expression. Comments and
 `max_width` can still require line breaks. When enabled, this option replaces
 `chain_width`'s width-based decision. When disabled, normal rustfmt layout applies.
 

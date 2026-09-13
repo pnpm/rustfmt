@@ -656,7 +656,6 @@ struct ChainFormatterShared<'a> {
     // because `self.children` will change size as we process the chain.
     child_count: usize,
     method_count: usize,
-    root_width: usize,
     root_is_call: bool,
     // Whether elements are allowed to overflow past the max_width limit
     allow_overflow: bool,
@@ -674,7 +673,6 @@ impl<'a> ChainFormatterShared<'a> {
                 .iter()
                 .filter(|item| matches!(item.kind, ChainItemKind::MethodCall(..)))
                 .count(),
-            root_width: 0,
             root_is_call: false,
             // TODO(calebcartwright)
             allow_overflow: false,
@@ -687,7 +685,6 @@ impl<'a> ChainFormatterShared<'a> {
         context: &RewriteContext<'_>,
         shape: Shape,
     ) -> Result<bool, RewriteError> {
-        self.root_width = shape.width;
         self.root_is_call = matches!(
             &parent.kind,
             ChainItemKind::Parent { expr, .. } if matches!(expr.kind, ast::ExprKind::Call(..))
@@ -703,13 +700,15 @@ impl<'a> ChainFormatterShared<'a> {
                 break;
             }
             if context.config.chain_complexity_layout() {
-                let leading_field = matches!(
+                let leading_access = matches!(
                     item.kind,
-                    ChainItemKind::StructField(..) | ChainItemKind::TupleField { .. }
+                    ChainItemKind::StructField(..)
+                        | ChainItemKind::TupleField { .. }
+                        | ChainItemKind::Await
                 );
                 let single_method =
                     self.method_count == 1 && matches!(item.kind, ChainItemKind::MethodCall(..));
-                if !leading_field && !single_method {
+                if !leading_access && !single_method {
                     break;
                 }
             } else if root_rewrite.len() > tab_width {
@@ -944,25 +943,13 @@ impl<'a> ChainFormatterShared<'a> {
         let children_iter = self.children.iter();
         let iter = rewrite_iter.zip(children_iter);
 
-        let mut previous_is_comment = false;
         for (rewrite, chain_item) in iter {
-            let line_width = if result.contains('\n') {
-                context.config.max_width()
-            } else {
-                self.root_width
-            };
-            let attach_suffix = context.config.chain_complexity_layout()
-                && !previous_is_comment
-                && matches!(chain_item.kind, ChainItemKind::Await)
-                && last_line_width(&result) + utils::unicode_str_width(rewrite) <= line_width;
             match chain_item.kind {
                 ChainItemKind::Comment(_, CommentPosition::Back) => result.push(' '),
                 ChainItemKind::Comment(_, CommentPosition::Top) => result.push_str(&connector),
-                _ if attach_suffix => (),
                 _ => result.push_str(&connector),
             }
             result.push_str(rewrite);
-            previous_is_comment = chain_item.is_comment();
         }
 
         Ok(result)

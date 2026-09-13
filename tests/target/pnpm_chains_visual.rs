@@ -106,3 +106,36 @@ fn function_call_receivers() {
                                   value.finish()
                               });
 }
+
+async fn await_uses_field_layout() {
+    let _ = client.fetch().await?.metadata.validate();
+    let _ = client
+                  .fetch()
+                  .await?
+                  .metadata
+                  .validate()
+                  .finish();
+    let _ = client
+                  .fetch()
+                  .await?
+                  .metadata
+                  .validate(options());
+    let _ = future.await?.metadata
+                                  .validate()
+                                  .finish()
+                                  .count();
+    let _ = client
+                  .fetch()
+                  .await?
+                  .0
+                  .1
+                  .validate()
+                  .finish();
+    let _ = client.fetch(request()).await?;
+    let _ = client
+                  .fetch(request())
+                  .await? // preserve await comment
+                  .metadata
+                  .validate()
+                  .finish();
+}
