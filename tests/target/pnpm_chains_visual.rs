@@ -95,3 +95,14 @@ fn single_complex_method_calls() {
                   .1;
     let _ = values.find(nested_function(argument)).metadata;
 }
+
+fn function_call_receivers() {
+    let _ = find_package(name).expect("package exists");
+    let _ = minimum_release_age_excludes(&advisories)
+            .expect("compute excludes");
+    let _ = find_package(name)
+                              .map(|value| {
+                                  value.normalize();
+                                  value.finish()
+                              });
+}

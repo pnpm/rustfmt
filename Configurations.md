@@ -298,7 +298,8 @@ where
 ## `chain_complexity_layout`
 
 A single method call starts on the receiver's line when it fits, including calls
-with complex or multiline arguments. Two method calls stay on one line when every
+with complex or multiline arguments. When the receiver is a function call, prefer
+a line break before the method over splitting its arguments. Two method calls stay on one line when every
 argument is simple and the expression fits `max_width`. Chains containing three
 or more method calls, or two calls with complex or multiline arguments, put each
 method call on its own line. The rule applies in all expression contexts,

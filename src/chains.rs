@@ -657,6 +657,7 @@ struct ChainFormatterShared<'a> {
     child_count: usize,
     method_count: usize,
     root_width: usize,
+    root_is_call: bool,
     // Whether elements are allowed to overflow past the max_width limit
     allow_overflow: bool,
 }
@@ -674,6 +675,7 @@ impl<'a> ChainFormatterShared<'a> {
                 .filter(|item| matches!(item.kind, ChainItemKind::MethodCall(..)))
                 .count(),
             root_width: 0,
+            root_is_call: false,
             // TODO(calebcartwright)
             allow_overflow: false,
         }
@@ -686,6 +688,10 @@ impl<'a> ChainFormatterShared<'a> {
         shape: Shape,
     ) -> Result<bool, RewriteError> {
         self.root_width = shape.width;
+        self.root_is_call = matches!(
+            &parent.kind,
+            ChainItemKind::Parent { expr, .. } if matches!(expr.kind, ast::ExprKind::Call(..))
+        );
         let mut root_rewrite: String = parent.rewrite_result(context, shape)?;
 
         let mut root_ends_with_block = parent.kind.is_block_like(context, &root_rewrite);
@@ -721,7 +727,8 @@ impl<'a> ChainFormatterShared<'a> {
             match &item.rewrite_result(context, shape) {
                 Ok(rewrite)
                     if context.config.chain_complexity_layout()
-                        && first_line_width(rewrite) > shape.width =>
+                        && (first_line_width(rewrite) > shape.width
+                            || (self.root_is_call && rewrite.contains('\n'))) =>
                 {
                     break;
                 }
@@ -904,7 +911,7 @@ impl<'a> ChainFormatterShared<'a> {
         let mut last_subexpr_str =
             last_subexpr_str.unwrap_or(last.rewrite_result(context, last_shape)?);
         if method_layout
-            && self.method_count > 1
+            && (self.method_count > 1 || self.root_is_call)
             && matches!(last.kind, ChainItemKind::MethodCall(..))
             && last_subexpr_str.contains('\n')
         {

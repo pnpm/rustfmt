@@ -163,3 +163,18 @@ fn single_complex_method_calls() {
     let _ = values.map(|value| { value.normalize(); value.finish() }).0.1;
     let _ = values.registry.packages.find(very_long_nested_function_name(long_argument_name)).metadata;
 }
+
+fn function_call_receivers() {
+    let excludes = minimum_release_age_excludes(&advisories, &HashMap::new(), age_cutoff()).expect(
+        "compute excludes",
+    );
+    let _ = find_package(name).expect("package exists");
+    let _ = find_package(name).map(|value| {
+        value.normalize();
+        value.finish()
+    });
+    let _ = find_package(name).metadata.insert(
+        "my-config".to_string(),
+        SpecifierAndResolution { specifier: "workspace:*".to_string(), resolution: resolved_package },
+    );
+}
