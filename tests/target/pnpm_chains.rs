@@ -47,10 +47,8 @@ fn fields_after_methods() {
 }
 
 fn nested_arguments() {
-    let _ = output
-        .contains(input.trim());
-    let _ = output
-        .contains(input.trim().to_lowercase());
+    let _ = output.contains(input.trim());
+    let _ = output.contains(input.trim().to_lowercase());
     let _ = output.values
         .map(|value| value.name.trim())
         .collect::<Vec<_>>();
@@ -97,11 +95,12 @@ fn long_single_calls() {
         .matches_any_of_the_supported_operating_systems(operating_system);
     let _ = parsed.configuration.platform.operating_system
         .matches_any_of_the_supported_operating_systems(first, second, third, fourth);
-    let _ = parsed.configuration.platform.operating_system
-        .with_platform_configuration(|configuration| {
+    let _ = parsed.configuration.platform.operating_system.with_platform_configuration(
+        |configuration| {
             let supported = configuration.supported_platforms();
             supported.contains(current_platform)
-        });
+        },
+    );
 }
 
 fn long_field_prefixes() {
@@ -162,8 +161,7 @@ fn complex_arguments() {
     let _ = packages
         .iter()
         .any(|package| package.enabled);
-    let _ = packages
-        .any(|package| package.enabled);
+    let _ = packages.any(|package| package.enabled);
 }
 
 fn multiline_arguments() {
@@ -195,12 +193,11 @@ second"#,
             second_argument_with_long_name,
             third_argument_with_long_name,
         );
-    let _ = receiver
-        .set(
-            first_argument_with_long_name,
-            second_argument_with_long_name,
-            third_argument_with_long_name,
-        );
+    let _ = receiver.set(
+        first_argument_with_long_name,
+        second_argument_with_long_name,
+        third_argument_with_long_name,
+    );
 }
 
 fn conditions() {
@@ -257,10 +254,7 @@ fn trailing_fields_in_vertical_chains() {
         .0
         .1
         .as_deref();
-    let _ = metadata
-        .get(package_name())
-        .details
-        .deprecated;
+    let _ = metadata.get(package_name()).details.deprecated;
     let _ = metadata.registry.packages
         .get("package")
         .expect("package metadata")
@@ -281,8 +275,34 @@ async fn fields_after_await_in_vertical_chains() {
         .name
         .trim()
         .is_empty();
-    let _ = client.registry
-        .fetch(request()).await?
-        .value
-        .name;
+    let _ = client.registry.fetch(request()).await?.value.name;
+}
+
+fn single_complex_method_calls() {
+    let _ = importer.config_dependencies.insert(
+        "my-config".to_string(),
+        SpecifierAndResolution {
+            specifier: "workspace:*".to_string(),
+            resolution: resolved_package,
+        },
+    );
+    let _ = values.map(|value| {
+        value.normalize();
+        value.finish()
+    });
+    let _ = values.contains(input.trim().to_lowercase());
+    let _ = values.map(|value| {
+        value.normalize();
+        value.finish()
+    })
+    .metadata
+    .field;
+    let _ = values.map(|value| {
+        value.normalize();
+        value.finish()
+    })
+    .0
+    .1;
+    let _ =
+        values.registry.packages.find(very_long_nested_function_name(long_argument_name)).metadata;
 }

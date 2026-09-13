@@ -697,10 +697,13 @@ impl<'a> ChainFormatterShared<'a> {
                 break;
             }
             if context.config.chain_complexity_layout() {
-                if !matches!(
+                let leading_field = matches!(
                     item.kind,
                     ChainItemKind::StructField(..) | ChainItemKind::TupleField { .. }
-                ) {
+                );
+                let single_method =
+                    self.method_count == 1 && matches!(item.kind, ChainItemKind::MethodCall(..));
+                if !leading_field && !single_method {
                     break;
                 }
             } else if root_rewrite.len() > tab_width {
@@ -718,7 +721,7 @@ impl<'a> ChainFormatterShared<'a> {
             match &item.rewrite_result(context, shape) {
                 Ok(rewrite)
                     if context.config.chain_complexity_layout()
-                        && utils::unicode_str_width(rewrite) > shape.width =>
+                        && first_line_width(rewrite) > shape.width =>
                 {
                     break;
                 }
@@ -800,6 +803,7 @@ impl<'a> ChainFormatterShared<'a> {
         let last = self.children.last().unknown_error()?;
         let method_layout = context.config.chain_complexity_layout();
         let force_vertical = method_layout
+            && self.method_count > 1
             && (self.method_count > 2
                 || self.children.iter().any(ChainItem::has_complex_arguments)
                 || self
@@ -900,6 +904,7 @@ impl<'a> ChainFormatterShared<'a> {
         let mut last_subexpr_str =
             last_subexpr_str.unwrap_or(last.rewrite_result(context, last_shape)?);
         if method_layout
+            && self.method_count > 1
             && matches!(last.kind, ChainItemKind::MethodCall(..))
             && last_subexpr_str.contains('\n')
         {

@@ -70,3 +70,28 @@ fn trailing_fields() {
                     .as_deref();
     let _ = metadata.get("package").0.1;
 }
+
+fn single_complex_method_calls() {
+    let _ = data.insert("my-config".to_string(),
+                        Config { name: "workspace:*"
+                                       .to_string(),
+                                 value: package });
+    let _ = values.map(|value| {
+        value.normalize();
+        value.finish()
+    });
+    let _ = values.contains(input.trim().to_lowercase());
+    let _ = values.map(|value| {
+        value.normalize();
+        value.finish()
+    })
+                  .metadata
+                  .field;
+    let _ = values.map(|value| {
+        value.normalize();
+        value.finish()
+    })
+                  .0
+                  .1;
+    let _ = values.find(nested_function(argument)).metadata;
+}

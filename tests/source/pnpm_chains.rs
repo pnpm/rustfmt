@@ -151,3 +151,15 @@ async fn fields_after_await_in_vertical_chains() {
     let _ = client.registry.fetch().await?.value.name.trim().is_empty();
     let _ = client.registry.fetch(request()).await?.value.name;
 }
+
+fn single_complex_method_calls() {
+    let _ = importer.config_dependencies.insert(
+        "my-config".to_string(),
+        SpecifierAndResolution { specifier: "workspace:*".to_string(), resolution: resolved_package },
+    );
+    let _ = values.map(|value| { value.normalize(); value.finish() });
+    let _ = values.contains(input.trim().to_lowercase());
+    let _ = values.map(|value| { value.normalize(); value.finish() }).metadata.field;
+    let _ = values.map(|value| { value.normalize(); value.finish() }).0.1;
+    let _ = values.registry.packages.find(very_long_nested_function_name(long_argument_name)).metadata;
+}

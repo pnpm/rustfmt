@@ -297,10 +297,11 @@ where
 
 ## `chain_complexity_layout`
 
-Keep chains containing at most two method calls on one line when every argument
-is simple and the expression fits `max_width`. Chains containing three or more
-method calls, complex arguments, or arguments that format across multiple lines
-put each method call on its own line. The rule applies in all expression contexts,
+A single method call starts on the receiver's line when it fits, including calls
+with complex or multiline arguments. Two method calls stay on one line when every
+argument is simple and the expression fits `max_width`. Chains containing three
+or more method calls, or two calls with complex or multiline arguments, put each
+method call on its own line. The rule applies in all expression contexts,
 including `if` and `while` conditions.
 
 Simple arguments are literals, paths (including qualified paths), field accesses,
