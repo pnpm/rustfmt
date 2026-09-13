@@ -1076,6 +1076,7 @@ impl<'b, 'a: 'b> FmtVisitor<'a> {
             is_if_else_block: Cell::new(false),
             is_loop_block: Cell::new(false),
             force_one_line_chain: Cell::new(false),
+            chain_head_break: Cell::new(None),
             snippet_provider: self.snippet_provider,
             macro_rewrite_failure: Cell::new(false),
             is_macro_def: self.is_macro_def,

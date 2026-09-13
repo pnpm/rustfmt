@@ -2276,11 +2276,23 @@ pub(crate) fn rewrite_assign_rhs_expr<R: Rewrite>(
         false
     };
 
+    context.chain_head_break.set(None);
+    let orig_rhs = ex.rewrite_result(context, orig_shape);
+    if rhs_tactics != RhsTactics::ForceNextLineWithoutIndent && !has_rhs_comment {
+        if let RhsAssignKind::Expr(_, span) = rhs_kind {
+            if context.chain_head_break.get() == Some(*span) {
+                if let Ok(rhs) = orig_rhs {
+                    return Ok(format!(" {rhs}"));
+                }
+            }
+        }
+    }
+
     choose_rhs(
         context,
         ex,
         orig_shape,
-        ex.rewrite_result(context, orig_shape),
+        orig_rhs,
         rhs_kind,
         rhs_tactics,
         has_rhs_comment,

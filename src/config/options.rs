@@ -645,6 +645,7 @@ config_option_with_style_edition_default!(
     StructVariantWidth, usize, _ => 35;
     ArrayWidth, usize, _ => 60;
     ChainWidth, usize, _ => 60;
+    ChainHeadWidth, isize, _ => -1;
     ChainComplexityLayout, bool, _ => false;
     SingleLineIfElseMaxWidth, usize, _ => 50;
     SingleLineLetElseMaxWidth, usize, _ => 50;

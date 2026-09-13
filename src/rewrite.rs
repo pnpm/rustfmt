@@ -118,6 +118,7 @@ pub(crate) struct RewriteContext<'a> {
     pub(crate) is_loop_block: Cell<bool>,
     // When rewriting chain, veto going multi line except the last element
     pub(crate) force_one_line_chain: Cell<bool>,
+    pub(crate) chain_head_break: Cell<Option<Span>>,
     pub(crate) snippet_provider: &'a SnippetProvider,
     // Used for `format_snippet`
     pub(crate) macro_rewrite_failure: Cell<bool>,

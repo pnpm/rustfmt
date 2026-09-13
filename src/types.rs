@@ -273,7 +273,12 @@ fn rewrite_segment(
     let mut result = String::with_capacity(128);
     result.push_str(rewrite_ident(context, segment.ident));
 
-    let ident_len = result.len();
+    let ident_len =
+        if context.config.chain_complexity_layout() && context.config.chain_head_width() >= 0 {
+            crate::utils::unicode_str_width(&result)
+        } else {
+            result.len()
+        };
     let span = mk_sp(*span_lo, span_hi);
     let shape = if context.use_block_indent() {
         shape.offset_left(ident_len, span)?

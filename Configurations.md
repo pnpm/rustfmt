@@ -295,6 +295,22 @@ where
 }
 ```
 
+## `chain_head_width`
+
+Limit the total line width through each field or `.await` access kept on the
+initial line of a chain. The count includes indentation and preceding text such
+as `let value = `. This option only applies with `chain_complexity_layout = true`.
+It covers named fields, tuple fields, and `.await`; `?` stays with its access.
+Method openings retain their normal complexity-based layout.
+
+An access that would exceed this limit starts a new line, even when the complete
+expression would fit `max_width`. Shorter prefixes stay together. Negative values
+use the normal `max_width` limit, and explicit values cannot exceed `max_width`.
+
+- **Default value**: `-1` (use `max_width`)
+- **Possible values**: any signed integer; negative values use `max_width`
+- **Stable**: Yes (pnpm fork extension)
+
 ## `chain_complexity_layout`
 
 A single method call starts on the receiver's line when it fits, including calls
@@ -312,7 +328,7 @@ multiple lines makes it complex regardless of its syntax. Source line breaks tha
 the formatter removes do not make an argument complex.
 
 Field accesses do not count as method calls. Leading field accesses stay with the
-root receiver when they fit. In a multiline chain, fields following a method call
+root receiver within `chain_head_width`. In a multiline chain, fields following a method call
 each occupy their own line. `.await` follows the same layout rules as field
 accesses. `?` stays attached to the preceding expression. Comments and
 `max_width` can still require line breaks. When enabled, this option replaces

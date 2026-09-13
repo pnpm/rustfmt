@@ -55,9 +55,12 @@ create_config! {
     array_width: ArrayWidth, true,  "Maximum width of an array literal before falling \
         back to vertical formatting.";
     chain_width: ChainWidth, true, "Maximum length of a chain to fit on a single line.";
+    chain_head_width: ChainHeadWidth, true,
+        "Maximum line width through leading field or await accesses; \
+        negative values use max_width.";
     chain_complexity_layout: ChainComplexityLayout, true,
         "Keep up to two simple method calls inline, and put longer or complex chains \
-        on separate lines while keeping field access together.";
+        on separate lines while grouping leading accesses within chain_head_width.";
     single_line_if_else_max_width: SingleLineIfElseMaxWidth, true, "Maximum line length for single \
         line if-else expressions. A value of zero means always break if-else expressions.";
     single_line_let_else_max_width: SingleLineLetElseMaxWidth, true, "Maximum line length for \
@@ -776,6 +779,7 @@ struct_pattern_width = -1
 struct_variant_width = 35
 array_width = 60
 chain_width = 60
+chain_head_width = -1
 chain_complexity_layout = false
 single_line_if_else_max_width = 50
 single_line_let_else_max_width = 50
@@ -871,6 +875,7 @@ struct_pattern_width = -1
 struct_variant_width = 35
 array_width = 60
 chain_width = 60
+chain_head_width = -1
 chain_complexity_layout = false
 single_line_if_else_max_width = 50
 single_line_let_else_max_width = 50

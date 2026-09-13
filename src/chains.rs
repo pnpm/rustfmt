@@ -385,6 +385,7 @@ impl ChainItem {
 
 #[derive(Debug)]
 struct Chain {
+    span: Span,
     parent: ChainItem,
     children: Vec<ChainItem>,
 }
@@ -507,7 +508,11 @@ impl Chain {
             );
         }
 
-        Chain { parent, children }
+        Chain {
+            span: expr.span,
+            parent,
+            children,
+        }
     }
 
     // Returns a Vec of the prefixes of the chain.
@@ -597,6 +602,9 @@ impl Rewrite for Chain {
         formatter.format_last_child(context, shape, child_shape)?;
 
         let result = formatter.join_rewrites(context, child_shape)?;
+        if formatter.head_width_exceeded() {
+            context.chain_head_break.set(Some(self.span));
+        }
         wrap_str(result, context.config.max_width(), shape).max_width_error(shape.width, full_span)
     }
 }
@@ -606,6 +614,7 @@ impl Rewrite for Chain {
 // different enough that branching on the indent all over the place gets ugly.
 // Anything that can format a chain is a ChainFormatter.
 trait ChainFormatter {
+    fn head_width_exceeded(&self) -> bool;
     // Parent is the first item in the chain, e.g., `foo` in `foo.bar.baz()`.
     // Root is the parent plus any other chain items placed on the first line to
     // avoid an orphan. E.g.,
@@ -657,6 +666,7 @@ struct ChainFormatterShared<'a> {
     child_count: usize,
     method_count: usize,
     root_is_call: bool,
+    head_width_exceeded: bool,
     // Whether elements are allowed to overflow past the max_width limit
     allow_overflow: bool,
 }
@@ -674,6 +684,7 @@ impl<'a> ChainFormatterShared<'a> {
                 .filter(|item| matches!(item.kind, ChainItemKind::MethodCall(..)))
                 .count(),
             root_is_call: false,
+            head_width_exceeded: false,
             // TODO(calebcartwright)
             allow_overflow: false,
         }
@@ -731,7 +742,24 @@ impl<'a> ChainFormatterShared<'a> {
                 {
                     break;
                 }
-                Ok(rewrite) => root_rewrite.push_str(rewrite),
+                Ok(rewrite) => {
+                    if context.config.chain_complexity_layout()
+                        && matches!(
+                            item.kind,
+                            ChainItemKind::StructField(..)
+                                | ChainItemKind::TupleField { .. }
+                                | ChainItemKind::Await
+                        )
+                        && usize::try_from(context.config.chain_head_width()).is_ok_and(|limit| {
+                            shape.used_width() + first_line_width(rewrite)
+                                > limit.min(context.config.max_width())
+                        })
+                    {
+                        self.head_width_exceeded = true;
+                        break;
+                    }
+                    root_rewrite.push_str(rewrite);
+                }
                 Err(_) => break,
             }
 
@@ -808,15 +836,16 @@ impl<'a> ChainFormatterShared<'a> {
     ) -> Result<(), RewriteError> {
         let last = self.children.last().unknown_error()?;
         let method_layout = context.config.chain_complexity_layout();
-        let force_vertical = method_layout
-            && self.method_count > 1
-            && (self.method_count > 2
-                || self.children.iter().any(ChainItem::has_complex_arguments)
-                || self
-                    .rewrites
-                    .iter()
-                    .skip(1)
-                    .any(|rewrite| rewrite.contains('\n')));
+        let force_vertical = self.head_width_exceeded
+            || (method_layout
+                && self.method_count > 1
+                && (self.method_count > 2
+                    || self.children.iter().any(ChainItem::has_complex_arguments)
+                    || self
+                        .rewrites
+                        .iter()
+                        .skip(1)
+                        .any(|rewrite| rewrite.contains('\n'))));
         let extendable = may_extend && !force_vertical && last_line_extendable(&self.rewrites[0]);
         let prev_last_line_width = last_line_width(&self.rewrites[0]);
 
@@ -972,6 +1001,10 @@ impl<'a> ChainFormatterBlock<'a> {
 }
 
 impl<'a> ChainFormatter for ChainFormatterBlock<'a> {
+    fn head_width_exceeded(&self) -> bool {
+        self.shared.head_width_exceeded
+    }
+
     fn format_root(
         &mut self,
         parent: &ChainItem,
@@ -1036,6 +1069,10 @@ impl<'a> ChainFormatterVisual<'a> {
 }
 
 impl<'a> ChainFormatter for ChainFormatterVisual<'a> {
+    fn head_width_exceeded(&self) -> bool {
+        self.shared.head_width_exceeded
+    }
+
     fn format_root(
         &mut self,
         parent: &ChainItem,
