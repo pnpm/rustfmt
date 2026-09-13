@@ -53,6 +53,9 @@ create_config! {
     array_width: ArrayWidth, true,  "Maximum width of an array literal before falling \
         back to vertical formatting.";
     chain_width: ChainWidth, true, "Maximum length of a chain to fit on a single line.";
+    chain_method_calls_one_per_line: ChainMethodCallsOnePerLine, true,
+        "Put each method call on its own line in chains with multiple calls, \
+        keeping field access together.";
     single_line_if_else_max_width: SingleLineIfElseMaxWidth, true, "Maximum line length for single \
         line if-else expressions. A value of zero means always break if-else expressions.";
     single_line_let_else_max_width: SingleLineLetElseMaxWidth, true, "Maximum line length for \
@@ -770,6 +773,7 @@ struct_lit_width = 18
 struct_variant_width = 35
 array_width = 60
 chain_width = 60
+chain_method_calls_one_per_line = false
 single_line_if_else_max_width = 50
 single_line_let_else_max_width = 50
 wrap_comments = false
@@ -863,6 +867,7 @@ struct_lit_width = 18
 struct_variant_width = 35
 array_width = 60
 chain_width = 60
+chain_method_calls_one_per_line = false
 single_line_if_else_max_width = 50
 single_line_let_else_max_width = 50
 wrap_comments = false
@@ -1001,6 +1006,21 @@ make_backup = false
         assert_eq!(config.was_set().edition(), false);
         assert_eq!(config.was_set_cli().edition(), true);
         assert_eq!(config.was_set_cli().emit_mode(), false);
+    }
+
+    #[test]
+    fn zero_width_limits_survive_context_adjustments() {
+        let mut config = Config::default();
+        config.override_value("struct_lit_width", "0");
+        config.override_value("chain_width", "0");
+        config.reduce_max_width(4);
+        assert_eq!(config.max_width(), 96);
+        assert_eq!(config.struct_lit_width(), 0);
+        assert_eq!(config.chain_width(), 0);
+        config.increase_max_width(4);
+        assert_eq!(config.max_width(), 100);
+        assert_eq!(config.struct_lit_width(), 0);
+        assert_eq!(config.chain_width(), 0);
     }
 
     #[cfg(test)]

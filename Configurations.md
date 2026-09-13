@@ -295,6 +295,31 @@ where
 }
 ```
 
+## `chain_method_calls_one_per_line`
+
+Format chains containing two or more method calls with each call on a separate line.
+Field accesses stay with their receiver when they fit, and `.await` and `?` stay
+with the preceding expression. Chains containing at most one method call may use
+the available line width. Comments and `max_width` can still require line breaks.
+When enabled, this option replaces `chain_width`'s width-based decision.
+
+- **Default value**: `false`
+- **Possible values**: `true`, `false`
+- **Stable**: Yes (pnpm fork extension)
+
+#### `true`:
+
+```rust
+fn example() {
+    parsed.dlx.os.is_empty();
+
+    parsed.dlx.os
+        .iter()
+        .map(Os::as_str)
+        .collect::<Vec<_>>();
+}
+```
+
 ## `chain_width`
 
 Maximum width of a chain to fit on one line.

@@ -464,7 +464,13 @@ macro_rules! create_config {
             /// As an example use case, this method is used when formatting
             /// arms within a declarative macro.
             fn adjust_max_width(&mut self, delta: isize) {
-                let adjust = |value: usize| (value as isize + delta) as usize;
+                let adjust = |value: usize| {
+                    if value == 0 {
+                        0
+                    } else {
+                        value.saturating_add_signed(delta)
+                    }
+                };
 
                 self.array_width.2 = adjust(self.array_width.2);
                 self.attr_fn_like_width.2 = adjust(self.attr_fn_like_width.2);

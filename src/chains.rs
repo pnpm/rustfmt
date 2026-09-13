@@ -646,6 +646,8 @@ struct ChainFormatterShared<'a> {
     // The number of children in the chain. This is not equal to `self.children.len()`
     // because `self.children` will change size as we process the chain.
     child_count: usize,
+    method_count: usize,
+    root_width: usize,
     // Whether elements are allowed to overflow past the max_width limit
     allow_overflow: bool,
 }
@@ -657,9 +659,73 @@ impl<'a> ChainFormatterShared<'a> {
             rewrites: Vec::with_capacity(chain.children.len() + 1),
             fits_single_line: false,
             child_count: chain.children.len(),
+            method_count: chain
+                .children
+                .iter()
+                .filter(|item| matches!(item.kind, ChainItemKind::MethodCall(..)))
+                .count(),
+            root_width: 0,
             // TODO(calebcartwright)
             allow_overflow: false,
         }
+    }
+
+    fn format_root(
+        &mut self,
+        parent: &ChainItem,
+        context: &RewriteContext<'_>,
+        shape: Shape,
+    ) -> Result<bool, RewriteError> {
+        self.root_width = shape.width;
+        let mut root_rewrite: String = parent.rewrite_result(context, shape)?;
+
+        let mut root_ends_with_block = parent.kind.is_block_like(context, &root_rewrite);
+        let tab_width = context.config.tab_spaces().saturating_sub(shape.offset);
+
+        while !root_rewrite.contains('\n') {
+            let item = &self.children[0];
+            if let ChainItemKind::Comment(..) = item.kind {
+                break;
+            }
+            if context.config.chain_method_calls_one_per_line() {
+                if !matches!(
+                    item.kind,
+                    ChainItemKind::StructField(..) | ChainItemKind::TupleField { .. }
+                ) {
+                    break;
+                }
+            } else if root_rewrite.len() > tab_width {
+                break;
+            }
+            let shape = if context.config.chain_method_calls_one_per_line() {
+                let Some(shape) = shape.offset_left_opt(utils::unicode_str_width(&root_rewrite))
+                else {
+                    break;
+                };
+                shape
+            } else {
+                shape.offset_left(root_rewrite.len(), item.span)?
+            };
+            match &item.rewrite_result(context, shape) {
+                Ok(rewrite)
+                    if context.config.chain_method_calls_one_per_line()
+                        && utils::unicode_str_width(rewrite) > shape.width =>
+                {
+                    break;
+                }
+                Ok(rewrite) => root_rewrite.push_str(rewrite),
+                Err(_) => break,
+            }
+
+            root_ends_with_block = last_line_extendable(&root_rewrite);
+
+            self.children = &self.children[1..];
+            if self.children.is_empty() {
+                break;
+            }
+        }
+        self.rewrites.push(root_rewrite);
+        Ok(root_ends_with_block)
     }
 
     fn pure_root(&mut self) -> Option<String> {
@@ -723,7 +789,9 @@ impl<'a> ChainFormatterShared<'a> {
         child_shape: Shape,
     ) -> Result<(), RewriteError> {
         let last = self.children.last().unknown_error()?;
-        let extendable = may_extend && last_line_extendable(&self.rewrites[0]);
+        let method_layout = context.config.chain_method_calls_one_per_line();
+        let force_vertical = method_layout && self.method_count > 1;
+        let extendable = may_extend && !force_vertical && last_line_extendable(&self.rewrites[0]);
         let prev_last_line_width = last_line_width(&self.rewrites[0]);
 
         // Total of all items excluding the last.
@@ -735,7 +803,9 @@ impl<'a> ChainFormatterShared<'a> {
                 .map(|rw| utils::unicode_str_width(rw))
                 .sum()
         } + last.tries;
-        let one_line_budget = if self.child_count == 1 {
+        let one_line_budget = if force_vertical {
+            0
+        } else if self.child_count == 1 || method_layout {
             shape.width
         } else {
             min(shape.width, context.config.chain_width())
@@ -837,13 +907,30 @@ impl<'a> ChainFormatterShared<'a> {
         let children_iter = self.children.iter();
         let iter = rewrite_iter.zip(children_iter);
 
+        let mut previous_is_comment = false;
         for (rewrite, chain_item) in iter {
+            let line_width = if result.contains('\n') {
+                context.config.max_width()
+            } else {
+                self.root_width
+            };
+            let attach_suffix = context.config.chain_method_calls_one_per_line()
+                && !previous_is_comment
+                && matches!(
+                    chain_item.kind,
+                    ChainItemKind::StructField(..)
+                        | ChainItemKind::TupleField { .. }
+                        | ChainItemKind::Await
+                )
+                && last_line_width(&result) + utils::unicode_str_width(rewrite) <= line_width;
             match chain_item.kind {
                 ChainItemKind::Comment(_, CommentPosition::Back) => result.push(' '),
                 ChainItemKind::Comment(_, CommentPosition::Top) => result.push_str(&connector),
+                _ if attach_suffix => (),
                 _ => result.push_str(&connector),
             }
             result.push_str(rewrite);
+            previous_is_comment = chain_item.is_comment();
         }
 
         Ok(result)
@@ -872,31 +959,7 @@ impl<'a> ChainFormatter for ChainFormatterBlock<'a> {
         context: &RewriteContext<'_>,
         shape: Shape,
     ) -> Result<(), RewriteError> {
-        let mut root_rewrite: String = parent.rewrite_result(context, shape)?;
-
-        let mut root_ends_with_block = parent.kind.is_block_like(context, &root_rewrite);
-        let tab_width = context.config.tab_spaces().saturating_sub(shape.offset);
-
-        while root_rewrite.len() <= tab_width && !root_rewrite.contains('\n') {
-            let item = &self.shared.children[0];
-            if let ChainItemKind::Comment(..) = item.kind {
-                break;
-            }
-            let shape = shape.offset_left(root_rewrite.len(), item.span)?;
-            match &item.rewrite_result(context, shape) {
-                Ok(rewrite) => root_rewrite.push_str(rewrite),
-                Err(_) => break,
-            }
-
-            root_ends_with_block = last_line_extendable(&root_rewrite);
-
-            self.shared.children = &self.shared.children[1..];
-            if self.shared.children.is_empty() {
-                break;
-            }
-        }
-        self.shared.rewrites.push(root_rewrite);
-        self.root_ends_with_block = root_ends_with_block;
+        self.root_ends_with_block = self.shared.format_root(parent, context, shape)?;
         Ok(())
     }
 
@@ -960,6 +1023,18 @@ impl<'a> ChainFormatter for ChainFormatterVisual<'a> {
         context: &RewriteContext<'_>,
         shape: Shape,
     ) -> Result<(), RewriteError> {
+        if context.config.chain_method_calls_one_per_line() {
+            self.shared.format_root(parent, context, shape)?;
+            self.offset = last_line_width(&self.shared.rewrites[0]);
+            let available = shape.width.saturating_sub(self.offset);
+            if self.shared.children.iter().any(|item| {
+                item.rewrite_result(context, shape)
+                    .map_or(true, |rewrite| first_line_width(&rewrite) > available)
+            }) {
+                self.offset = 0;
+            }
+            return Ok(());
+        }
         let parent_shape = shape.visual_indent(0);
         let mut root_rewrite = parent.rewrite_result(context, parent_shape)?;
         let multiline = root_rewrite.contains('\n');
