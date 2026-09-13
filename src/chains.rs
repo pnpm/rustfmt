@@ -666,6 +666,7 @@ struct ChainFormatterShared<'a> {
     child_count: usize,
     method_count: usize,
     root_is_call: bool,
+    root_has_complex_method: bool,
     head_width_exceeded: bool,
     // Whether elements are allowed to overflow past the max_width limit
     allow_overflow: bool,
@@ -684,6 +685,7 @@ impl<'a> ChainFormatterShared<'a> {
                 .filter(|item| matches!(item.kind, ChainItemKind::MethodCall(..)))
                 .count(),
             root_is_call: false,
+            root_has_complex_method: false,
             head_width_exceeded: false,
             // TODO(calebcartwright)
             allow_overflow: false,
@@ -704,6 +706,7 @@ impl<'a> ChainFormatterShared<'a> {
 
         let mut root_ends_with_block = parent.kind.is_block_like(context, &root_rewrite);
         let tab_width = context.config.tab_spaces().saturating_sub(shape.offset);
+        let mut attached_method = false;
 
         while !root_rewrite.contains('\n') {
             let item = &self.children[0];
@@ -717,9 +720,13 @@ impl<'a> ChainFormatterShared<'a> {
                         | ChainItemKind::TupleField { .. }
                         | ChainItemKind::Await
                 );
-                let single_method =
-                    self.method_count == 1 && matches!(item.kind, ChainItemKind::MethodCall(..));
-                if !leading_access && !single_method {
+                let attach_method = matches!(item.kind, ChainItemKind::MethodCall(..))
+                    && (self.method_count == 1
+                        || (!self.root_is_call
+                            && !attached_method
+                            && utils::unicode_str_width(&root_rewrite)
+                                <= context.config.tab_spaces()));
+                if !leading_access && !attach_method {
                     break;
                 }
             } else if root_rewrite.len() > tab_width {
@@ -758,6 +765,13 @@ impl<'a> ChainFormatterShared<'a> {
                     {
                         self.head_width_exceeded = true;
                         break;
+                    }
+                    if context.config.chain_complexity_layout()
+                        && matches!(item.kind, ChainItemKind::MethodCall(..))
+                    {
+                        attached_method = true;
+                        self.root_has_complex_method =
+                            item.has_complex_arguments(context) || rewrite.contains('\n');
                     }
                     root_rewrite.push_str(rewrite);
                 }
@@ -867,6 +881,7 @@ impl<'a> ChainFormatterShared<'a> {
             || (method_layout
                 && self.method_count > 1
                 && (self.method_count > 2
+                    || self.root_has_complex_method
                     || self
                         .children
                         .iter()

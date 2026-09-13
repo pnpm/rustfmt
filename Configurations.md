@@ -323,7 +323,11 @@ a line break before the method over splitting its arguments. Two method calls st
 argument is simple and the expression fits `max_width`. Chains containing three
 or more method calls, or two calls with complex or multiline arguments, put each
 method call on its own line. The rule applies in all expression contexts,
-including `if` and `while` conditions.
+including `if` and `while` conditions. In a wrapped chain, the first method stays
+with a non-call receiver at most one indentation level (`tab_spaces`) wide when it
+fits. This width excludes indentation and binding prefixes. Only the first method
+gets this allowance. Leading fields and awaits continue to follow `chain_head_width`;
+fields and awaits after a method on a new line remain on separate lines.
 
 Simple arguments are literals, paths (including qualified paths), field accesses,
 and references, unary operators, or parentheses around those expressions. A zero-argument

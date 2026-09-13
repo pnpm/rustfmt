@@ -25,8 +25,7 @@ fn examples() {
         .copied()
         .collect::<Vec<_>>();
     let _ = x.map(|s| f(s)).count();
-    let _ = x
-        .iter() // preserve comment
+    let _ = x.iter() // preserve comment
         .copied()
         .count();
     let _ = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
